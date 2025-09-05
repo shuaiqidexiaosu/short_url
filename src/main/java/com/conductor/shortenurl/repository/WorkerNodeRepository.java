@@ -15,7 +15,7 @@
  */
 package com.conductor.shortenurl.repository;
 
-import com.baidu.fsg.uid.worker.entity.WorkerNodeEntity;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;

@@ -1,5 +1,9 @@
 package com.conductor.shortenurl.service;
 
+import com.conductor.shortenurl.type.dto.ShortLinkCreateReq;
+import com.conductor.shortenurl.type.dto.ShortLinkCreateRes;
+import com.conductor.shortenurl.type.dto.ShortLinkRes;
+
 /**
  * @author renliangyu857
  */
@@ -23,4 +27,5 @@ public interface UrlService {
    */
   String getLongUrlByShortUrl(String shortUrl);
 
+  ShortLinkRes<ShortLinkCreateRes> createShortLink(ShortLinkCreateReq requestParam);
 }

@@ -1,6 +1,6 @@
 package com.conductor.shortenurl.repository;
 
-import com.conductor.shortenurl.entity.UrlMapping;
+import com.conductor.shortenurl.type.entity.UrlMapping;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
@@ -8,8 +8,7 @@ import org.springframework.stereotype.Repository;
  * @author renliangyu857
  */
 @Repository
-@Mapper
-public interface UrlRepository {
+public interface UrlRepository extends UrlMapping {
 
   void saveUrlMapping(UrlMapping urlMapping);
 

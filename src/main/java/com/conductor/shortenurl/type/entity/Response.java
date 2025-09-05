@@ -1,9 +1,13 @@
-package com.conductor.shortenurl.entity;
+package com.conductor.shortenurl.type.entity;
 
 /*
  * @author: enping.jep
  * @create: 2023-04-18 3:01 PM
  */
+
+import javax.persistence.Entity;
+
+@Entity(name = "Response")
 public class Response {
 
   //返回码

@@ -1,6 +1,9 @@
 package com.conductor.shortenurl.controller;
 
-import com.conductor.shortenurl.entity.Response;
+import com.conductor.shortenurl.type.dto.ShortLinkCreateReq;
+import com.conductor.shortenurl.type.dto.ShortLinkCreateRes;
+import com.conductor.shortenurl.type.dto.ShortLinkRes;
+import com.conductor.shortenurl.type.entity.Response;
 import com.conductor.shortenurl.service.UrlService;
 import com.conductor.shortenurl.util.UrlUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,4 +69,11 @@ public class UrlController {
         //没有对应的原始链接，直接返回首页
         response.sendRedirect("/");
     }
+    @GetMapping("/api/short-link/v1/create")
+    public ShortLinkRes<ShortLinkCreateRes> createShortLink(@RequestBody ShortLinkCreateReq requestParam){
+//        生成短链接
+        return urlService.createShortLink(requestParam);
+    }
+
+
 }

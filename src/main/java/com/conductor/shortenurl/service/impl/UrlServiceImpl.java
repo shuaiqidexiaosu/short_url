@@ -1,7 +1,10 @@
 package com.conductor.shortenurl.service.impl;
 
 import cn.hutool.core.util.StrUtil;
-import com.conductor.shortenurl.entity.UrlMapping;
+import com.conductor.shortenurl.type.dto.ShortLinkCreateReq;
+import com.conductor.shortenurl.type.dto.ShortLinkCreateRes;
+import com.conductor.shortenurl.type.dto.ShortLinkRes;
+import com.conductor.shortenurl.type.entity.UrlMapping;
 import com.conductor.shortenurl.exceptions.RetryLimitExceededException;
 import com.conductor.shortenurl.generate.ShortUrlGenerateFactory;
 import com.conductor.shortenurl.repository.UrlRepository;
@@ -18,6 +21,7 @@ import org.redisson.Redisson;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -30,7 +34,7 @@ import org.slf4j.LoggerFactory;
 @Service
 public class UrlServiceImpl implements UrlService {
 
-    private static Logger logger = LoggerFactory.getLogger(UrlServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(UrlServiceImpl.class);
 
     private static final int MAXRETRIES = 3;
 
@@ -60,7 +64,7 @@ public class UrlServiceImpl implements UrlService {
 
         // 布隆过滤器判断长链接存在 && 生成的短链接去查询的长链接与用户输入的长链接相等
         if (urlBloomFilter.contains(longUrl) && Objects.equals(redisTemplate.opsForValue().get(shortUrl), longUrl)) {
-                return shortUrl;
+            return shortUrl;
         }
 
         // 否， 短链接布隆过滤器判断短链不存在
@@ -73,13 +77,19 @@ public class UrlServiceImpl implements UrlService {
         }
 
         // 入数据库
-        try {
-            urlRepository.saveUrlMapping(new UrlMapping(shortUrl, longUrl, timeout));
-        } catch (DuplicateKeyException e) {
-            // 判断冲突则重试拼接时间戳再Hash（兜底策略， 布隆过滤器丢失时才可能发生）
-            // 也有可能会继续冲突， 也可以增加一个最大重试次数
-            shortUrl = HashUtil.base62MurmurHash(longUrl + System.currentTimeMillis());
-            urlRepository.saveUrlMapping(new UrlMapping(shortUrl, longUrl, timeout));
+        for (int i = 0; i < MAXRETRIES; i++) {
+            try {
+                urlRepository.saveUrlMapping(new UrlMapping(shortUrl, longUrl, timeout));
+            } catch (DuplicateKeyException e) {
+                // 判断冲突则重试拼接时间戳再Hash（兜底策略， 布隆过滤器丢失时才可能发生）
+                // 也有可能会继续冲突， 也可以增加一个最大重试次数
+                shortUrl = HashUtil.base62MurmurHash(longUrl + System.currentTimeMillis());
+                urlRepository.saveUrlMapping(new UrlMapping(shortUrl, longUrl, timeout));
+            } catch (DataAccessException e) {
+                logger.error("数据库操作失败", e);
+            } catch (Exception e) {
+                logger.error("系统异常", e);
+            }
         }
 
         // 入布隆过滤器
@@ -103,7 +113,7 @@ public class UrlServiceImpl implements UrlService {
         }
 
         // Redis 查询空字符串
-        if (Objects.nonNull(longUrl)){
+        if (Objects.nonNull(longUrl)) {
             return null;
         }
 
@@ -124,7 +134,8 @@ public class UrlServiceImpl implements UrlService {
             if (urlMapping != null) {
                 long remainTime = urlMapping.getExpireTime().getTime() - new Date().getTime();
                 if (remainTime > 0) {
-                    redisTemplate.opsForValue().set(urlMapping.getShortUrl(), urlMapping.getLongUrl(),(long) (remainTime * RandomUtils.nextDouble(0.2, 0.4)), TimeUnit.SECONDS);
+                    redisTemplate.opsForValue().set(urlMapping.getShortUrl(), urlMapping.getLongUrl(),
+                            (long) (remainTime * RandomUtils.nextDouble(0.2, 0.4)), TimeUnit.SECONDS);
                     return urlMapping.getLongUrl();
                 } else {  // 过期数据，惰性删除
                     urlRepository.deleteUrlMapping(urlMapping.getShortUrl());
@@ -140,11 +151,29 @@ public class UrlServiceImpl implements UrlService {
         }
     }
 
+    @Override
+    public ShortLinkRes<ShortLinkCreateRes> createShortLink(ShortLinkCreateReq requestParam) {
+//        实现用hash62算法, 将长连接变为短连接, 并且返回
+        String longUrl = requestParam.getOriginUrl();
+        String type = "hash62";
+        String shortUrl = generateShortUrl(longUrl, type, null);
+        ShortLinkCreateRes createRes = new ShortLinkCreateRes();
+        createRes.setGid(requestParam.getGid());
+        createRes.setShortUri(shortUrl);
+        createRes.setOriginUrl(longUrl);
+        createRes.setFullShortUrl(requestParam.getFullShortUrl());
+        ShortLinkRes<ShortLinkCreateRes> res = new ShortLinkRes<>();
+        res.setCode(ShortLinkRes.SUCCESS_CODE);
+        res.setMessage("success");
+        return res;
+    }
+
     public String generateUniqueShortUrl(String longUrl, String type) throws RetryLimitExceededException {
 
         for (int i = 0; i < MAXRETRIES; i++) {
-            String newShortUrl = ShortUrlGenerateFactory.getInstance(type).generate(longUrl + System.currentTimeMillis());
-            if (shortUrlBloomFilter.contains(newShortUrl)){
+            String newShortUrl =
+                    ShortUrlGenerateFactory.getInstance(type).generate(longUrl + System.currentTimeMillis());
+            if (shortUrlBloomFilter.contains(newShortUrl)) {
                 continue;
             }
             return newShortUrl;
@@ -152,9 +181,6 @@ public class UrlServiceImpl implements UrlService {
 
         throw new RetryLimitExceededException("Failed to generate a unique short link after 3 retries.");
     }
-
-
-
 
 
 }
