@@ -8,7 +8,7 @@
     </appender>
 
     <logger name="org.redisson" additivity="true">
-        <level value="info"/>
+        <level value="warn"/>
     </logger>
 
     <root>
