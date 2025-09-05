@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.conductor.shortenurl.type.dto.ShortLinkCreateReq;
 import com.conductor.shortenurl.type.dto.ShortLinkCreateRes;
 import com.conductor.shortenurl.type.dto.ShortLinkRes;
-import com.conductor.shortenurl.type.entity.UrlMapping;
+import com.conductor.shortenurl.type.entity.UrlMappingEntity;
 import com.conductor.shortenurl.exceptions.RetryLimitExceededException;
 import com.conductor.shortenurl.generate.ShortUrlGenerateFactory;
 import com.conductor.shortenurl.repository.UrlRepository;
@@ -51,7 +51,7 @@ public class UrlServiceImpl implements UrlService {
     @Resource
     private RBloomFilter<String> shortUrlBloomFilter;
 
-    @Resource
+    @Resource(name = "redisTemplate")
     RedisTemplate<String, String> redisTemplate;
 
     @Resource
@@ -79,12 +79,12 @@ public class UrlServiceImpl implements UrlService {
         // 入数据库
         for (int i = 0; i < MAXRETRIES; i++) {
             try {
-                urlRepository.saveUrlMapping(new UrlMapping(shortUrl, longUrl, timeout));
+                urlRepository.save(new UrlMappingEntity(shortUrl, longUrl, timeout));
             } catch (DuplicateKeyException e) {
                 // 判断冲突则重试拼接时间戳再Hash（兜底策略， 布隆过滤器丢失时才可能发生）
                 // 也有可能会继续冲突， 也可以增加一个最大重试次数
                 shortUrl = HashUtil.base62MurmurHash(longUrl + System.currentTimeMillis());
-                urlRepository.saveUrlMapping(new UrlMapping(shortUrl, longUrl, timeout));
+                urlRepository.save(new UrlMappingEntity(shortUrl, longUrl, timeout));
             } catch (DataAccessException e) {
                 logger.error("数据库操作失败", e);
             } catch (Exception e) {
@@ -128,17 +128,17 @@ public class UrlServiceImpl implements UrlService {
             }
 
             // Redis没有缓存，从数据库查找
-            UrlMapping urlMapping = urlRepository.getLongUrlByShortUrl(shortUrl);
+            UrlMappingEntity urlMappingEntity = urlRepository.getLongUrlByShortUrl(shortUrl);
 
             // 数据库有此短链接，添加缓存
-            if (urlMapping != null) {
-                long remainTime = urlMapping.getExpireTime().getTime() - new Date().getTime();
+            if (urlMappingEntity != null) {
+                long remainTime = urlMappingEntity.getExpireTime().getTime() - new Date().getTime();
                 if (remainTime > 0) {
-                    redisTemplate.opsForValue().set(urlMapping.getShortUrl(), urlMapping.getLongUrl(),
+                    redisTemplate.opsForValue().set(urlMappingEntity.getShortUrl(), urlMappingEntity.getLongUrl(),
                             (long) (remainTime * RandomUtils.nextDouble(0.2, 0.4)), TimeUnit.SECONDS);
-                    return urlMapping.getLongUrl();
+                    return urlMappingEntity.getLongUrl();
                 } else {  // 过期数据，惰性删除
-                    urlRepository.deleteUrlMapping(urlMapping.getShortUrl());
+                    urlRepository.deleteUrlMapping(urlMappingEntity.getShortUrl());
                     redisTemplate.delete(shortUrl);
                 }
             }

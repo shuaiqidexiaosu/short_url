@@ -1,0 +1,94 @@
+server:
+  port: 8060
+  host: http://localhost:8060/
+
+spring:
+  redis:
+    host: 172.26.24.34
+    port: 6379
+    # database: 1
+    # timeout: 10000ms
+
+  # 分库分表全局配置
+  shardingsphere:
+    enabled: true
+    datasource:
+      names: ds0,ds1,ds2,ds3,ds4
+      ds0:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driverClassName: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://172.26.24.34:3306/url_0?useUnicode=true&characterEncoding=utf-8&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=GMT%2B8&useTimezone=true
+        username: root
+        password: "531"
+      ds1:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driverClassName: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://172.26.24.34:3306/url_1?useUnicode=true&characterEncoding=utf-8&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=GMT%2B8&useTimezone=true
+        username: root
+        password: "531"
+      ds2:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driverClassName: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://172.26.24.34:3306/url_2?useUnicode=true&characterEncoding=utf-8&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=GMT%2B8&useTimezone=true
+        username: root
+        password: "531"
+      ds3:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driverClassName: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://172.26.24.34:3306/url_3?useUnicode=true&characterEncoding=utf-8&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=GMT%2B8&useTimezone=true
+        username: root
+        password: "531"
+      ds4:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driverClassName: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://172.26.24.34:3306/url_4?useUnicode=true&characterEncoding=utf-8&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=GMT%2B8&useTimezone=true
+        username: root
+        password: "531"
+
+    sharding:
+      tables:
+        url_mapping:
+          actualDataNodes: ds$->{0..4}.url_mapping_$->{0..3}
+          database-strategy:
+            standard:
+              sharding-column: short_url
+              precise-algorithm-class-name: com.conductor.shortenurl.strategy.UrlDBShardingAlgorithm
+          table-strategy:
+            standard:
+              sharding-column: short_url
+              precise-algorithm-class-name: com.conductor.shortenurl.strategy.UrlTableShardingAlgorithm
+        WORKER_NODE:
+          actualDataNodes: ds0.WORKER_NODE
+
+    props:
+      sql:
+        show: true
+
+  application:
+    bloom: URL
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    root: info
+  file:
+    name: ./log/shortenurl
+
+
+
+baidu-short-url:
+  timeBits: 30
+  workerBits: 18
+  seqBits: 15
+  epochStr: "2019-07-10"
+  boostPower: 3
+  paddingFactor: 65
+  scheduleInterval: 6000
+
+
+
+
