@@ -1,8 +1,8 @@
 package com.conductor.shortenurl.service;
 
-import com.conductor.shortenurl.type.dto.ShortLinkCreateReq;
-import com.conductor.shortenurl.type.dto.ShortLinkCreateRes;
-import com.conductor.shortenurl.type.dto.ShortLinkRes;
+import com.conductor.shortenurl.common.type.dto.ShortLinkCreateReq;
+import com.conductor.shortenurl.common.type.dto.ShortLinkCreateRes;
+import com.conductor.shortenurl.common.type.dto.ShortLinkRes;
 
 /**
  * @author renliangyu857

@@ -1,14 +1,22 @@
-package com.conductor.shortenurl.type.entity;
+package com.conductor.shortenurl.common.type.entity;
 
 /*
  * @author: enping.jep
  * @create: 2023-04-18 3:01 PM
  */
 
+import com.conductor.shortenurl.common.BaseEntity;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import javax.persistence.Entity;
 
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity(name = "Response")
-public class Response {
+public class Response extends BaseEntity {
 
   //返回码
   private Integer code;
@@ -18,7 +26,6 @@ public class Response {
 
   //业务数据
   private Object data;
-
 
   public static Response successs(String msg, Object data) {
     return new Response(200, msg, data);
@@ -40,30 +47,5 @@ public class Response {
   public Response(Integer code, String msg) {
     this.code = code;
     this.msg = msg;
-  }
-
-
-  public Integer getCode() {
-    return code;
-  }
-
-  public void setCode(Integer code) {
-    this.code = code;
-  }
-
-  public String getMsg() {
-    return msg;
-  }
-
-  public void setMsg(String msg) {
-    this.msg = msg;
-  }
-
-  public Object getData() {
-    return data;
-  }
-
-  public void setData(Object data) {
-    this.data = data;
   }
 }

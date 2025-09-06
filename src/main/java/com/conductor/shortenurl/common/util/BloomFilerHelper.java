@@ -1,9 +1,10 @@
 package com.conductor.shortenurl.common.util;
 
-import java.util.concurrent.TimeUnit;
-import javax.annotation.Resource;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RedissonClient;
+
+import javax.annotation.Resource;
+import java.util.concurrent.TimeUnit;
 
 public class BloomFilerHelper {
 

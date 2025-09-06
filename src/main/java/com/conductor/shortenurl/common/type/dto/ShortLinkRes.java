@@ -1,8 +1,6 @@
-package com.conductor.shortenurl.type.dto;
+package com.conductor.shortenurl.common.type.dto;
 
-import lombok.Builder;
 import lombok.Data;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;

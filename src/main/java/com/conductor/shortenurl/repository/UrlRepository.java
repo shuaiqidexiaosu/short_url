@@ -1,7 +1,6 @@
 package com.conductor.shortenurl.repository;
 
-import com.conductor.shortenurl.type.entity.UrlMappingEntity;
-import org.aspectj.apache.bcel.classfile.Module;
+import com.conductor.shortenurl.common.type.entity.UrlMappingEntity;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

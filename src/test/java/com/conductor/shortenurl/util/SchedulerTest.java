@@ -1,9 +1,10 @@
 package com.conductor.shortenurl.util;
 
+import org.junit.jupiter.api.Test;
+
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.Test;
 
 public class SchedulerTest {
     @Test
@@ -12,7 +13,7 @@ public class SchedulerTest {
         scheduledExecutorService.scheduleAtFixedRate(()->{
             System.out.println("delete from url_mapping where expire_time < now()");
         }, 11, 24, TimeUnit.HOURS);
-        //Ð¡¶¥¶Ñ
-        // ÔÚÄÚ´æÀïÃæ
+        //Ð¡ï¿½ï¿½ï¿½ï¿½
+        // ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½
     }
 }

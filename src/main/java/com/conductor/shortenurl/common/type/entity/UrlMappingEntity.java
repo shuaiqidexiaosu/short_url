@@ -1,4 +1,4 @@
-package com.conductor.shortenurl.type.entity;
+package com.conductor.shortenurl.common.type.entity;
 
 import com.conductor.shortenurl.common.BaseEntity;
 import lombok.Getter;

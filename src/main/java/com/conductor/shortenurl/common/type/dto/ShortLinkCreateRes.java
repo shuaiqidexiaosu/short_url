@@ -1,24 +1,22 @@
-package com.conductor.shortenurl.type.dto;
+package com.conductor.shortenurl.common.type.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-
 /**
- * @program: ShortLinkCreateReq
+ * @program: ShortLinkCreateRes
  * @description:
  * @author: 智慧的苏苏
- * @create: 2025-08-27 21:14
+ * @create: 2025-08-27 21:12
  **/
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ShortLinkCreateReq implements Serializable {
+public class ShortLinkCreateRes {
 
     /**
      * 分组信息

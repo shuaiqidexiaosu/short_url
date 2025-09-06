@@ -1,15 +1,18 @@
 package com.conductor.shortenurl.controller;
 
-import com.conductor.shortenurl.type.dto.ShortLinkCreateReq;
-import com.conductor.shortenurl.type.dto.ShortLinkCreateRes;
-import com.conductor.shortenurl.type.dto.ShortLinkRes;
-import com.conductor.shortenurl.type.entity.Response;
-import com.conductor.shortenurl.service.UrlService;
+import com.conductor.shortenurl.common.type.dto.ShortLinkCreateReq;
+import com.conductor.shortenurl.common.type.dto.ShortLinkCreateRes;
+import com.conductor.shortenurl.common.type.dto.ShortLinkRes;
+import com.conductor.shortenurl.common.type.entity.Response;
 import com.conductor.shortenurl.common.util.UrlUtil;
+import com.conductor.shortenurl.service.UrlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -32,6 +35,7 @@ public class UrlController {
 
     /**
      * 默认跳转到首页
+     *
      * @return
      */
     @GetMapping("/")
@@ -42,15 +46,17 @@ public class UrlController {
 
     /**
      * 生成短链接
+     *
      * @param longUrl
      * @param timeout
      * @return
      */
     @GetMapping("/shortUrl/generate")
     @ResponseBody
-    public Response generateShortUrl(@RequestParam String longUrl, @RequestParam(required = false) String type, @RequestParam(required = false) Integer timeout) {
+    public Response generateShortUrl(@RequestParam String longUrl, @RequestParam(required = false) String type,
+                                     @RequestParam(required = false) Integer timeout) {
         if (UrlUtil.checkURL(longUrl)) {
-            if (!longUrl.startsWith("http")) {
+            if (!longUrl.startsWith("http") && !longUrl.startsWith("https")) {
                 longUrl = "http://" + longUrl;
             }
             String shortURL = urlService.generateShortUrl(longUrl, type, timeout);
@@ -69,8 +75,9 @@ public class UrlController {
         //没有对应的原始链接，直接返回首页
         response.sendRedirect("/");
     }
+
     @GetMapping("/api/short-link/v1/create")
-    public ShortLinkRes<ShortLinkCreateRes> createShortLink(@RequestBody ShortLinkCreateReq requestParam){
+    public ShortLinkRes<ShortLinkCreateRes> createShortLink(@RequestBody ShortLinkCreateReq requestParam) {
 //        生成短链接
         return urlService.createShortLink(requestParam);
     }

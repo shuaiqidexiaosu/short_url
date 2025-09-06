@@ -2,33 +2,32 @@ package com.conductor.shortenurl.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.conductor.shortenurl.common.constant.RedisKeyConstant;
-import com.conductor.shortenurl.type.dto.ShortLinkCreateReq;
-import com.conductor.shortenurl.type.dto.ShortLinkCreateRes;
-import com.conductor.shortenurl.type.dto.ShortLinkRes;
-import com.conductor.shortenurl.type.entity.UrlMappingEntity;
 import com.conductor.shortenurl.common.exceptions.RetryLimitExceededException;
+import com.conductor.shortenurl.common.type.dto.ShortLinkCreateReq;
+import com.conductor.shortenurl.common.type.dto.ShortLinkCreateRes;
+import com.conductor.shortenurl.common.type.dto.ShortLinkRes;
+import com.conductor.shortenurl.common.type.entity.UrlMappingEntity;
+import com.conductor.shortenurl.common.util.HashUtil;
 import com.conductor.shortenurl.generate.ShortUrlGenerateFactory;
 import com.conductor.shortenurl.repository.UrlRepository;
 import com.conductor.shortenurl.service.UrlService;
-import com.conductor.shortenurl.common.util.HashUtil;
-
-import java.util.Date;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import javax.annotation.Resource;
-
 import org.apache.commons.lang3.RandomUtils;
 import org.redisson.Redisson;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import javax.annotation.Resource;
+import java.util.Date;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author renliangyu857
@@ -51,7 +50,7 @@ public class UrlServiceImpl implements UrlService {
     @Resource
     private RBloomFilter<String> shortUrlBloomFilter;
 
-    @Resource(name = "redisTemplate")
+    @Resource
     RedisTemplate<String, String> redisTemplate;
 
     @Resource
@@ -77,20 +76,29 @@ public class UrlServiceImpl implements UrlService {
         }
 
         // 入数据库
+        boolean isSuccess = false;
         for (int i = 0; i < MAX_RETRIES; i++) {
             try {
                 urlRepository.save(new UrlMappingEntity(shortUrl, longUrl, timeout));
+                isSuccess = true;
             } catch (DuplicateKeyException e) {
                 // 判断冲突则重试拼接时间戳再Hash（兜底策略， 布隆过滤器丢失时才可能发生）
                 // 也有可能会继续冲突， 也可以增加一个最大重试次数
                 shortUrl = HashUtil.base62MurmurHash(longUrl + System.currentTimeMillis());
                 urlRepository.save(new UrlMappingEntity(shortUrl, longUrl, timeout));
+                logger.error("短链接冲突， 正重试生成短链接", e);
             } catch (DataAccessException e) {
                 logger.error("数据库操作失败", e);
+                break;
             } catch (Exception e) {
                 logger.error("系统异常", e);
+                break;
             }
         }
+        if (!isSuccess) {
+            throw new RuntimeException("冲突重试次数过多， 请稍后再试");
+        }
+
 
         // 入布隆过滤器
         urlBloomFilter.add(longUrl);
