@@ -4,11 +4,15 @@ import com.conductor.shortenurl.repository.UrlRepository;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
+
+
+@Component
 public class DeleteExpiredUrlMappingsJob implements Job {
 
-    @Autowired
+    @Resource
     private UrlRepository urlRepository;
 
     @Override

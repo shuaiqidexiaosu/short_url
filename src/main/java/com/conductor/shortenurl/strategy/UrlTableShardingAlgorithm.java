@@ -1,6 +1,6 @@
 package com.conductor.shortenurl.strategy;
 
-import com.conductor.shortenurl.util.ShardingUtil;
+import com.conductor.shortenurl.common.util.ShardingUtil;
 import org.apache.shardingsphere.api.sharding.standard.PreciseShardingAlgorithm;
 import org.apache.shardingsphere.api.sharding.standard.PreciseShardingValue;
 

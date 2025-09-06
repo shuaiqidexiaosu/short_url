@@ -1,5 +1,6 @@
 package com.conductor.shortenurl.util;
 
+import com.conductor.shortenurl.common.util.HashUtil;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.Test;
 

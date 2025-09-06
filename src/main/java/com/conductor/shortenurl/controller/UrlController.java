@@ -5,7 +5,7 @@ import com.conductor.shortenurl.type.dto.ShortLinkCreateRes;
 import com.conductor.shortenurl.type.dto.ShortLinkRes;
 import com.conductor.shortenurl.type.entity.Response;
 import com.conductor.shortenurl.service.UrlService;
-import com.conductor.shortenurl.util.UrlUtil;
+import com.conductor.shortenurl.common.util.UrlUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;

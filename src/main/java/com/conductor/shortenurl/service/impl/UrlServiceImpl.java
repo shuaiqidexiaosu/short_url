@@ -1,18 +1,20 @@
 package com.conductor.shortenurl.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import com.conductor.shortenurl.common.constant.RedisKeyConstant;
 import com.conductor.shortenurl.type.dto.ShortLinkCreateReq;
 import com.conductor.shortenurl.type.dto.ShortLinkCreateRes;
 import com.conductor.shortenurl.type.dto.ShortLinkRes;
 import com.conductor.shortenurl.type.entity.UrlMappingEntity;
-import com.conductor.shortenurl.exceptions.RetryLimitExceededException;
+import com.conductor.shortenurl.common.exceptions.RetryLimitExceededException;
 import com.conductor.shortenurl.generate.ShortUrlGenerateFactory;
 import com.conductor.shortenurl.repository.UrlRepository;
 import com.conductor.shortenurl.service.UrlService;
-import com.conductor.shortenurl.util.HashUtil;
+import com.conductor.shortenurl.common.util.HashUtil;
 
 import java.util.Date;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Resource;
 
@@ -36,9 +38,7 @@ public class UrlServiceImpl implements UrlService {
 
     private static final Logger logger = LoggerFactory.getLogger(UrlServiceImpl.class);
 
-    private static final int MAXRETRIES = 3;
-
-    private static final String LOCK_URL = "lock:getLongUrlByShortUrl:";
+    private static final int MAX_RETRIES = 5;
 
     private static final int CACHE_NULL_TTL = 10;
 
@@ -77,7 +77,7 @@ public class UrlServiceImpl implements UrlService {
         }
 
         // 入数据库
-        for (int i = 0; i < MAXRETRIES; i++) {
+        for (int i = 0; i < MAX_RETRIES; i++) {
             try {
                 urlRepository.save(new UrlMappingEntity(shortUrl, longUrl, timeout));
             } catch (DuplicateKeyException e) {
@@ -118,7 +118,7 @@ public class UrlServiceImpl implements UrlService {
         }
 
         // 获取分布式锁
-        RLock lock = redisson.getLock(LOCK_URL + shortUrl);
+        RLock lock = redisson.getLock(String.format(RedisKeyConstant.LOCK_KEY, shortUrl));
         lock.lock();
         try {
             // double check
@@ -128,10 +128,12 @@ public class UrlServiceImpl implements UrlService {
             }
 
             // Redis没有缓存，从数据库查找
-            UrlMappingEntity urlMappingEntity = urlRepository.getLongUrlByShortUrl(shortUrl);
+            Optional<UrlMappingEntity> optionalUrlMappingEntity = urlRepository.getLongUrlByShortUrl(shortUrl);
+
 
             // 数据库有此短链接，添加缓存
-            if (urlMappingEntity != null) {
+            if (optionalUrlMappingEntity.isPresent()) {
+                UrlMappingEntity urlMappingEntity = optionalUrlMappingEntity.get();
                 long remainTime = urlMappingEntity.getExpireTime().getTime() - new Date().getTime();
                 if (remainTime > 0) {
                     redisTemplate.opsForValue().set(urlMappingEntity.getShortUrl(), urlMappingEntity.getLongUrl(),
@@ -170,7 +172,7 @@ public class UrlServiceImpl implements UrlService {
 
     public String generateUniqueShortUrl(String longUrl, String type) throws RetryLimitExceededException {
 
-        for (int i = 0; i < MAXRETRIES; i++) {
+        for (int i = 0; i < MAX_RETRIES; i++) {
             String newShortUrl =
                     ShortUrlGenerateFactory.getInstance(type).generate(longUrl + System.currentTimeMillis());
             if (shortUrlBloomFilter.contains(newShortUrl)) {

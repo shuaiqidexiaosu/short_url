@@ -1,6 +1,6 @@
 package com.conductor.shortenurl.strategy;
 
-import com.conductor.shortenurl.util.ShardingUtil;
+import com.conductor.shortenurl.common.util.ShardingUtil;
 import org.apache.shardingsphere.api.sharding.standard.PreciseShardingAlgorithm;
 import org.apache.shardingsphere.api.sharding.standard.PreciseShardingValue;
 
@@ -22,7 +22,7 @@ public class UrlDBShardingAlgorithm extends CustomShardingAlgorithm implements P
     @Override
     public String doSharding(Collection<String> databaseNames, PreciseShardingValue<String> preciseShardingValue) {
         long slot = calSlot(preciseShardingValue) / ShardingUtil.TBL_CNT;
-        String databaseName = DS + String.valueOf(slot);
+        String databaseName = String.format("%s%d", DS, slot);
         if (databaseNames.contains(databaseName)) {
             return databaseName;
         }

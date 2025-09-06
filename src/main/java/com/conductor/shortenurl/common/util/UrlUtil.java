@@ -1,4 +1,4 @@
-package com.conductor.shortenurl.util;
+package com.conductor.shortenurl.common.util;
 
 import java.util.regex.Pattern;
 

@@ -1,6 +1,6 @@
 package com.conductor.shortenurl.generate;
 
-import com.conductor.shortenurl.util.HashUtil;
+import com.conductor.shortenurl.common.util.HashUtil;
 
 public class HashShortUrlGenerator implements ShortUrlGenerator {
 	@Override
